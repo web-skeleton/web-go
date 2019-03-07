@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	{{ if .WithMySQL }}
 	"github.com/jinzhu/gorm"
+	{{ end }}
 	"github.com/mylxsw/go-toolkit/container"
 	"github.com/mylxsw/go-toolkit/graceful"
 	"github.com/mylxsw/go-toolkit/log"
@@ -33,12 +35,15 @@ func New(cc *container.Container) *App {
 }
 
 func (app *App) Init() error {
-	return app.cc.ResolveWithError(func(db *gorm.DB) {
+	return app.cc.ResolveWithError(func({{ if .WithMySQL }}db *gorm.DB{{ end }}) {
+	    {{ if .WithMySQL }}
 		// TODO add your models here
 		db.AutoMigrate(&repos.DemoRepo{})
 
 		// TODO register your repositories to application container
 		app.cc.MustPrototype(repos.NewDemoRepo)
+		{{ end }}
+		app.cc.MustPrototype(repos.NewMetricRepo)
 	})
 }
 

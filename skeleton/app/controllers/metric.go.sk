@@ -1,0 +1,27 @@
+package controllers
+
+import (
+	"net/http"
+
+	"github.com/mylxsw/go-toolkit/web"
+
+	repos "{{ .Module }}/app/repositories"
+)
+
+type MetricController struct{}
+
+func NewMetricController() *MetricController {
+	return &MetricController{}
+}
+
+func (controller *MetricController) Metric(ctx *web.WebContext, req *web.Request, metricRepo *repos.MetricRepo) web.HTTPResponse {
+
+	metric, err := metricRepo.All()
+	if err != nil {
+		return ctx.JSON(web.M{"error": err.Error()}).WithCode(http.StatusInternalServerError)
+	}
+
+	return ctx.JSON(web.M{
+		"metric": metric,
+	})
+}

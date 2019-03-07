@@ -8,8 +8,8 @@ import (
 
 func API(r *web.Router) {
 
-	demo := controllers.NewDemoController()
+	metric := controllers.NewMetricController()
 	{
-		r.Get("/", demo.Demo)
+		r.Get("/", metric.Metric)
 	}
 }

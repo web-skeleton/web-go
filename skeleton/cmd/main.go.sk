@@ -4,8 +4,10 @@ import (
 	"context"
 	"os"
 
+    {{ if .WithMySQL }}
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	{{ end }}
 	"github.com/mylxsw/go-toolkit/container"
 	"github.com/mylxsw/go-toolkit/events"
 	"github.com/mylxsw/go-toolkit/graceful"
@@ -42,12 +44,12 @@ func main() {
 			Name:  "listen",
 			Value: "0.0.0.0:19950",
 			Usage: "http服务地址",
-		}),
+		}),{{ if .WithMySQL }}
 		altsrc.NewStringFlag(cli.StringFlag{
 			Name:  "mysql_conn",
 			Value: "root:@tcp(127.0.0.1:3306)/dbname?parseTime=true",
 			Usage: "数据库连接地址",
-		}),
+		}),{{ end }}
 	}
 
 	app := cli.NewApp()
@@ -102,6 +104,7 @@ func server(c *cli.Context) error {
 	cc.MustSingleton(graceful.NewWithDefault)
 	cc.MustSingleton(webApp.New)
 
+    {{ if .WithMySQL }}
 	cc.MustSingleton(func(conf *config.Config) (*gorm.DB, error) {
 		db, err := gorm.Open("mysql", conf.MySQLConn)
 		if err != nil {
@@ -113,6 +116,7 @@ func server(c *cli.Context) error {
 
 		return db, nil
 	})
+	{{ end }}
 
 	// cc.MustResolve(func(manager *events.EventManager) {
 	// 	manager.Listen(func(evt EventType) {})

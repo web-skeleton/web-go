@@ -1,0 +1,17 @@
+package repos
+
+type MetricRepo struct {
+}
+
+type Metric map[string]string
+
+func NewMetricRepo() *MetricRepo {
+	return &MetricRepo{}
+}
+
+func (repo *MetricRepo) All() (*Metric, error) {
+	metric := make(Metric)
+	metric["author"] = "mylxsw"
+
+	return &metric, nil
+}

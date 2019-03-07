@@ -1,0 +1,4 @@
+{{ if not .WithMySQL }}
+demo.go.sk
+model.go.sk
+{{ end }}
