@@ -1,0 +1,19 @@
+package config
+
+import (
+	"gopkg.in/urfave/cli.v1"
+)
+
+// Config holds all configs from config file
+type Config struct {
+	Listen    string
+	MySQLConn string
+}
+
+// Load config from cli
+func Load(c *cli.Context) *Config {
+	return &Config{
+		Listen:    c.String("listen"),
+		MySQLConn: c.String("mysql_conn"),
+	}
+}

@@ -1,0 +1,45 @@
+package repos
+
+import (
+	"time"
+
+	"github.com/jinzhu/gorm"
+)
+
+type Model struct {
+	ID        uint       `gorm:"primary_key" json:"id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `sql:"index" json:"deleted_at"`
+}
+
+type Paginator struct {
+	Current int `json:"current_page"`
+	Last    int `json:"last_page"`
+	PerPage int `json:"per_page"`
+	Total   int `json:"total"`
+}
+
+func NewPaginator(db *gorm.DB, current, perPage int, data interface{}) (*Paginator, error) {
+	var total int
+	if err := db.Count(&total).Error; err != nil {
+		return nil, err
+	}
+
+	if err := db.Offset((current - 1) * perPage).Limit(perPage).Find(data).Error; err != nil {
+		return nil, err
+	}
+
+	last := total / perPage
+	left := total % perPage
+	if left > 0 {
+		last += 1
+	}
+
+	return &Paginator{
+		Current: current,
+		PerPage: perPage,
+		Total:   total,
+		Last:    last,
+	}, nil
+}

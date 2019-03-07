@@ -1,0 +1,9 @@
+package routes
+
+import (
+	"github.com/mylxsw/go-toolkit/web"
+)
+
+func Web(r *web.Router) {
+
+}

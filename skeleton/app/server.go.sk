@@ -1,0 +1,93 @@
+package app
+
+import (
+	"context"
+	"net"
+	"net/http"
+	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
+	"github.com/mylxsw/go-toolkit/container"
+	"github.com/mylxsw/go-toolkit/graceful"
+	"github.com/mylxsw/go-toolkit/log"
+	"github.com/mylxsw/go-toolkit/web"
+
+	repos "{{ .Module }}/app/repositories"
+	"{{ .Module }}/app/routes"
+	"{{ .Module }}/config"
+)
+
+var logger = log.Module("app")
+
+// App is the web app
+type App struct {
+	cc *container.Container
+}
+
+// New create a new App
+func New(cc *container.Container) *App {
+	return &App{
+		cc: cc,
+	}
+}
+
+func (app *App) Init() error {
+	return app.cc.ResolveWithError(func(db *gorm.DB) {
+		// TODO add your models here
+		db.AutoMigrate(&repos.DemoRepo{})
+
+		// TODO register your repositories to application container
+		app.cc.MustPrototype(repos.NewDemoRepo)
+	})
+}
+
+// Start create the http server
+func (app *App) Start() error {
+	return app.cc.ResolveWithError(func(conf *config.Config, gf *graceful.Graceful) error {
+		listener, err := net.Listen("tcp", conf.Listen)
+		if err != nil {
+			return err
+		}
+
+		srv := &http.Server{
+			Handler: app.router(),
+		}
+
+		gf.RegisterShutdownHandler(func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			logger.Debugf("prepare to shutdown http server...")
+			if err := srv.Shutdown(ctx); err != nil {
+				logger.Errorf("shutdown http server failed: %s", err)
+			}
+
+			logger.Warning("http server has been shutdown")
+		})
+
+		go func() {
+			logger.Debugf("http server started, listening on %s", conf.Listen)
+			if err := srv.Serve(listener); err != nil {
+				logger.Debugf("http server stopped: %s", err)
+				if err != http.ErrServerClosed {
+					gf.Shutdown()
+				}
+			}
+		}()
+
+		return nil
+	})
+}
+
+func (app *App) router() *mux.Router {
+	router := web.NewRouterWithContainer(app.cc)
+
+	mw := web.NewRequestMiddleware()
+
+	router.Group("/api", routes.API, mw.AccessLog(), mw.JSONExceptionHandler(), mw.CORS("*"))
+	router.Group("/", routes.Web, mw.AccessLog(), mw.ExceptionHandler())
+
+	muxRouter := router.Perform()
+	return muxRouter
+}

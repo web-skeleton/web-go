@@ -1,0 +1,8 @@
+module {{ .Module }}
+
+require (
+	github.com/gorilla/mux v1.6.2
+	github.com/jinzhu/gorm v1.9.2
+	github.com/mylxsw/go-toolkit v0.0.0-20190115143736-d7c33963041e
+	gopkg.in/urfave/cli.v1 v1.20.0
+)

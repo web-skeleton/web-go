@@ -1,0 +1,53 @@
+package repos
+
+import (
+	"github.com/jinzhu/gorm"
+)
+
+type Demo struct {
+	Model
+
+	Name string `gorm:"size:255" json:"name"`
+	URL  string `gorm:"size:255" json:"url"`
+}
+
+type DemoPaginator struct {
+	Paginator
+	Data []Demo `json:"data"`
+}
+
+type DemoRepo struct {
+	db *gorm.DB
+}
+
+func NewDemoRepo(db *gorm.DB) *DemoRepo {
+	return &DemoRepo{db: db}
+}
+
+func (repo *DemoRepo) All(page, perPage int) (*DemoPaginator, error) {
+	model := repo.db.Model(&Demo{})
+	var dataSources []Demo
+	paginator, err := NewPaginator(model, page, perPage, &dataSources)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DemoPaginator{Paginator: *paginator, Data: dataSources}, nil
+}
+
+func (repo *DemoRepo) Create(dataSource Demo) (*Demo, error) {
+	if err := repo.db.Create(&dataSource).Error; err != nil {
+		return nil, err
+	}
+
+	return &dataSource, nil
+}
+
+func (repo *DemoRepo) Get(id int) (*Demo, error) {
+	var dataSource Demo
+	if err := repo.db.Model(&Demo{}).Where("id = ?", id).First(&dataSource).Error; err != nil {
+		return nil, err
+	}
+
+	return &dataSource, nil
+}

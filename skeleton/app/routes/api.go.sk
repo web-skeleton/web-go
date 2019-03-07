@@ -1,0 +1,15 @@
+package routes
+
+import (
+	"github.com/mylxsw/go-toolkit/web"
+
+	"{{ .Module }}/app/controllers"
+)
+
+func API(r *web.Router) {
+
+	demo := controllers.NewDemoController()
+	{
+		r.Get("/", demo.Demo)
+	}
+}
